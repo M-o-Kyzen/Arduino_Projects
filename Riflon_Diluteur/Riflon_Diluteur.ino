@@ -133,28 +133,9 @@ void setup()
   lcd.noCursor();
 }
 
-
 void loop()
 {
 
-/*
-  Serial.print("Distance : ");
-  Serial.print(distance); //en cm
-  Serial.println(" cm");
-  Serial.print("temps : ");
-  Serial.print(time);
-  Serial.println(" µs");
-  Serial.println("");
-*/
-
-/*
-  if (index != 16 && menu_enabled == 1)
-  {
-    Serial.print(keys[index]);
-    lcd.print(keys[index]);
-    delay(500);
-  }
-*/
 /*
 Menus :
 
@@ -227,7 +208,6 @@ C : IHM
           if (cpt_animation == 16){
             cpt_animation = 0;
           }
-
           
         break;
         case 1 /*Menu A*/ :
@@ -285,17 +265,8 @@ C : IHM
               Serial.print(digit_buffer2[0]);
               Serial.print(" <> ");
               Serial.println(digit_buffer2[1]);
-              /*
-              //Info buffer
-              for (int i = 0; i < 3; i++) {
-                Serial.print("[");
-                Serial.print(digit_buffer[i]);
-                Serial.print("] ");
-              };
-            
-              Serial.println();
-              */
             }
+
             lcd.setCursor(0, 1);
             lcd.print("Dilu "); 
             lcd.print(digit_buffer2[0]);
@@ -701,15 +672,4 @@ C : IHM
 
         break;
     }
-  
-/*
-  lcd.setCursor(0, 0); 
-  lcd.print(distance);
-  lcd.setCursor(0, 1);
-  lcd.print(distance2);
-  lcd.clear();
-*/
-
-//delay(300);
-//Serial.println(index);
 }

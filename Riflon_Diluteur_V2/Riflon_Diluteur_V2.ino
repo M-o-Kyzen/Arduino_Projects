@@ -419,7 +419,9 @@ C : IHM
               
               pilotage_EV2 = 0;
             }
-
+            
+            //Pour le pilotage des vanes : 9s : 2s de charge au niveau de l'EV -> 7s de mouvement actuel de la vanne pour s'assurer qu'elle soit en butée fermée ou ouverte
+            
             delta_time_EV1 = millis() - start_timer_EV1;
             //Ouverture EV1
             if (delta_time_EV1 <= 9000 && pilotage_EV1 == 1){
