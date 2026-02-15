@@ -42,10 +42,15 @@ float distance;
 float time;
 float distance2;
 float time2;
+float volume_cuve1_max = 2.58;
+float volume_cuve2_max = 2.47;
 float volume_cuve1;
 float volume_cuve2;
+float volume_cuve1_actuel;
+float volume_cuve2_actuel;
 float volume_contenant_cuve1;
 float volume_contenant_cuve2;
+int prod_ok;
 int start_timer_EV1;
 int delta_time_EV1;
 int start_timer_EV2;
@@ -56,7 +61,7 @@ int start_timer_U1;
 int delta_time_U1;
 int start_timer_U2;
 int delta_time_U2;
-bool one_time[50];
+bool one_time[15];
 int cpt_animation = 0;
 
 void setup()
@@ -202,7 +207,6 @@ C : IHM
           lcd.print(" ");
           lcd.setCursor(cpt_animation, 1);
           lcd.print(">");
-          //lcd.display();
           delay(300);
 
           if (cpt_animation == 16){
@@ -237,7 +241,6 @@ C : IHM
             }
             lcd.print(digit_concat);
             lcd.print(" mL");
-            //lcd.display();
             //lcd.clear();
             delay(300);
 
@@ -273,7 +276,6 @@ C : IHM
             lcd.print(" <> ");
             lcd.print(digit_buffer2[1]);
             lcd.print(" Alcl"); 
-            //lcd.display();
             //lcd.clear();
             delay(300);
 
@@ -350,40 +352,52 @@ C : IHM
             //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
             distance2 = ((time2 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
 
-            volume_cuve1 = (distance*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
-            volume_cuve2 = (distance2*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 2 en litre
+            volume_cuve1_actuel = (distance*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
+            volume_cuve2_actuel = (distance2*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 2 en litre
             
             volume_contenant_cuve1 = rapport_diluant / (rapport_diluant + rapport_alcool) * volume_contenant;
             volume_contenant_cuve2 = rapport_alcool / (rapport_diluant + rapport_alcool) * volume_contenant;
+
+
+            //Otebntion du volume de départ des cuves
+            if (one_time[7]){
+              volume_cuve1 = (distance*0.01 * 0.003025 * 3.14)*1000;
+              volume_cuve2 = (distance2*0.01 * 0.003025 * 3.14)*1000;
+              one_time[7] = false;
+            }    
 
             //Initialisation du temps de pilotage pour ouvrir/fermer les EV
             if (one_time[0]){
               start_timer_EV1 = millis();
               start_timer_EV2 = millis();
               one_time[0] = false;
+            }            if (one_time[0]){
+              start_timer_EV1 = millis();
+              start_timer_EV2 = millis();
+              one_time[0] = false;
             }
 
-            if (volume_contenant_cuve1 < volume_cuve1){
+            if (volume_contenant_cuve1 > volume_cuve1 - volume_cuve1_actuel){
               pilotage_EV1 = 1;
             } else {
               if (one_time[1]){
                 start_timer_EV1 = millis();
                 delta_time_EV1 = 0;
+                prod_ok = prod_ok + 1;
               }
               one_time[1] = false;
-
               pilotage_EV1 = 0;
             }
 
-            if (volume_contenant_cuve2 < volume_cuve2){
+            if (volume_contenant_cuve2 > volume_cuve2 - volume_cuve2_actuel){
               pilotage_EV2 = 1;
             } else {
               if (one_time[2]){
                 start_timer_EV2 = millis();
                 delta_time_EV2 = 0;
+                prod_ok = prod_ok + 1;
               }
               one_time[2] = false;
-              
               pilotage_EV2 = 0;
             }
 
@@ -415,9 +429,42 @@ C : IHM
               digitalWrite(10, true);
             } else {
               digitalWrite(10, false);
-            }   
+            }
+            
+            //Porduction terminée
+            if (prod_ok == 2){
+              phase_A = 5;
+              prod_ok = 0;
+              lcd.clear();
+              Serial.print("Production terminée !");
+              break;
+            }
           
           }
+
+          //Porduction terminée
+          while (phase_A == 5){
+            index = keyPad.getKey();
+
+            lcd.setCursor(0, 0);
+            lcd.print("Production");
+            lcd.setCursor(0, 1);
+            lcd.print("terminée !");
+
+            //Sortie du menu A
+            if (index == 12 /*'*' : Retour*/){
+              Serial.print("Retour");
+              menu_enabled = 1;
+              phase_A = 1;
+              phase_B = 1;
+              phase_C = 1;
+              menu_selected = 0;
+              lcd.clear();
+              delay(300);
+              break;
+            }
+          }
+
         break;
         case 2 /*Menu B*/ :
           //Pilotage  EV1
@@ -446,7 +493,7 @@ C : IHM
             if (delta_time_U1 <= 1000){
               if (one_time[3]){
 
-                volume_cuve1 = (distance*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
+                volume_cuve1 = volume_cuve1_max - (distance*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
 
                 one_time[3] = false;
               }
@@ -467,7 +514,7 @@ C : IHM
               digitalWrite(8, false);
             }
 
-            lcd.setCursor(0, 0); 
+            lcd.setCursor(0, 0);
             lcd.print("EV1 1->O 2->F");
             lcd.setCursor(0, 1); 
             lcd.print("Volume : ");
@@ -506,7 +553,7 @@ C : IHM
             if (delta_time_U2 <= 1000){
               if (one_time[4]){
 
-                volume_cuve2 = (distance2*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
+                volume_cuve2 = volume_cuve2_max - (distance2*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
 
                 one_time[4] = false;
               }
