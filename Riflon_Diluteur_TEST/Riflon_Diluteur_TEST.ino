@@ -360,7 +360,7 @@ C : IHM
             volume_cuve2_actuel = (distance2*0.01 * 0.003025 * 3.14)*1000.0; //Calcul du volume de la cuve 2 en litre
             
 
-//Obtention des volumes de départ des cuves ainsi que des temps d'ouverture des vannes
+            //Obtention des volumes de départ des cuves ainsi que des temps d'ouverture des vannes
             if (one_time[7]){
               
               volume_contenant_cuve1 = (rapport_diluant / (rapport_diluant + rapport_alcool)) * (volume_contenant/1000);
@@ -372,7 +372,7 @@ C : IHM
               volume_cuve1_actuel = 1.5;
               volume_cuve2_actuel = 1.5;
 
-              //Calcul du temps d'ouverture des vannes à partir du delta entre le volume actuel d'une cuve et le volume final voulu après production
+              //Calcul du temps d'ouverture des vannes eà partir du delta entre le volume actuel d'une cuve et le volume final voulu après production
               duree_EV1 = (volume_cuve1_actuel*9361.1-872.2) - ((volume_cuve1_actuel-volume_contenant_cuve1)*9361.1-872.2);
               duree_EV2 = (volume_cuve2_actuel*9361.1-872.2) - ((volume_cuve2_actuel-volume_contenant_cuve2)*9361.1-872.2);
               
@@ -418,7 +418,18 @@ C : IHM
                 one_time[9] = false;
               }
             }
-
+/*
+            //Fermeture EV1
+            if (delta_time_EV1 > duree_tot_EV1){
+              digitalWrite(8, true);
+                if (one_time[3] && duree_tot_EV1 + 9000){
+                  prod_ok = prod_ok + 1;
+                  one_time[3] = false;
+                }
+            } else {
+              digitalWrite(8, false);
+            }
+*/
             delta_time_EV2 = millis() - start_timer_EV2;
             //Pilotage EV2
             if (delta_time_EV2 <= duree_tot_EV2 && duree_EV2 != 0){
@@ -434,8 +445,19 @@ C : IHM
                 one_time[10] = false;
               }
             }
-             
-            //Production terminée
+/*
+            //Fermeture EV2
+            if (delta_time_EV2 > duree_tot_EV2){
+              digitalWrite(10, true);
+              if (one_time[4] && duree_tot_EV1 + 9000){
+                prod_ok = prod_ok + 1;
+                one_time[4] = false;
+              }
+            } else {
+              digitalWrite(10, false);
+            }
+*/           
+            //Porduction terminée
             if (prod_ok == 2){
               digitalWrite(8, false);
               digitalWrite(9, false);
@@ -474,255 +496,7 @@ C : IHM
           }
 
         break;
-        case 2 /*Menu B*/ :
-          //Pilotage  EV1
-          while (phase_B == 1){
-            index = keyPad.getKey();
 
-            //init du timer de calcul du volume
-            if (one_time[5]){
-              start_timer_U1 = millis();
-              one_time[5] = false;
-            }
-
-            //Mesure des hauteurs
-            UltrasoundSensors.digitalWrite(P7, HIGH);
-            delayMicroseconds(10);
-            UltrasoundSensors.digitalWrite(P7, LOW);
-
-            //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time = UltrasoundSensors.pulseIn(P6, HIGH);
-
-            //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance = ((time / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
-            
-            delta_time_U1 = millis() - start_timer_U1;
-
-            if (delta_time_U1 <= 1000){
-              if (one_time[3]){
-
-                volume_cuve1 = volume_cuve1_max - (distance*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
-
-                one_time[3] = false;
-              }
-            } else {
-              start_timer_U1 = millis();
-              one_time[3] = true;
-            }
-            
-            if (index == 0){
-              digitalWrite(9, true);
-            } else {
-              digitalWrite(9, false);
-            }
-
-            if (index == 1){
-              digitalWrite(8, true);
-            } else {
-              digitalWrite(8, false);
-            }
-
-            lcd.setCursor(0, 0);
-            lcd.print("EV1 1->O 2->F");
-            lcd.setCursor(0, 1); 
-            lcd.print("Volume : ");
-            lcd.print(volume_cuve1);
-            lcd.print(" L");
-
-            //Passage à EV2
-            if (index == 14){
-              Serial.print("Pilotage EV2");
-              phase_B = 2;
-              lcd.clear();
-              break;
-            } 
-          }
-          while (phase_B == 2){
-            index = keyPad.getKey();
-
-            //init du timer de calcul du volume
-            if (one_time[6]){
-              start_timer_U2 = millis();
-              one_time[6] = false;
-            }
-            //Mesure des hauteurs
-            UltrasoundSensors.digitalWrite(P5, HIGH);
-            delayMicroseconds(10);
-            UltrasoundSensors.digitalWrite(P5, LOW);
-
-            //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time2 = UltrasoundSensors.pulseIn(P4, HIGH);
-
-            //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance2 = ((time2 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
-            
-            delta_time_U2 = millis() - start_timer_U2;
-
-            if (delta_time_U2 <= 1000){
-              if (one_time[4]){
-
-                volume_cuve2 = volume_cuve2_max - (distance2*0.01 * 0.003025 * 3.14)*1000; //Calcul du volume de la cuve 1 en litre
-
-                one_time[4] = false;
-              }
-            } else {
-              start_timer_U2 = millis();
-              one_time[4] = true;
-            }
-            if (index == 0){
-              digitalWrite(11, true);
-            } else {
-              digitalWrite(11, false);
-            }
-
-            if (index == 1){
-              digitalWrite(10, true);
-            } else {
-              digitalWrite(10, false);
-            }
-
-            lcd.setCursor(0, 0); 
-            lcd.print("EV2 1->O 2->F");
-            lcd.setCursor(0, 1); 
-            lcd.print("Volume : ");
-            lcd.print(volume_cuve2);
-            lcd.print(" L");
-
-            //Sortie du menu B
-            if (index == 12 /*'*' : Retour*/){
-              Serial.print("Retour");
-              menu_enabled = 1;
-              phase_A = 1;
-              phase_B = 1;
-              phase_C = 1;
-              menu_selected = 0;
-              lcd.clear();
-              delay(300);
-              break;
-            }
-          }
- 
-        break;
-        case 3 /*Menu C*/ :
-          //Valeurs capteurs
-          while (phase_C == 1){
-            index = keyPad.getKey();
-
-            //Mesure des hauteurs
-            UltrasoundSensors.digitalWrite(P7, HIGH);
-            delayMicroseconds(10);
-            UltrasoundSensors.digitalWrite(P7, LOW);
-
-            //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time = UltrasoundSensors.pulseIn(P6, HIGH);
-
-            //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance = ((time / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
-
-            //Mesure des hauteurs
-            UltrasoundSensors.digitalWrite(P5, HIGH);
-            delayMicroseconds(10);
-            UltrasoundSensors.digitalWrite(P5, LOW);
-
-            //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time2 = UltrasoundSensors.pulseIn(P4, HIGH);
-
-            //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance2 = ((time2 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
-
-            lcd.setCursor(0, 0); 
-            lcd.print("Distance : ");
-            lcd.print(distance);
-            lcd.print(" cm");
-
-            lcd.setCursor(0, 1); 
-            lcd.print("Distance : ");
-            lcd.print(distance2);
-            lcd.print(" cm");
-
-            //Passage aux bus PCF8574
-            if (index == 14){
-              Serial.print("Bus PCF8574");
-              phase_C = 2;
-              lcd.clear();
-              break;
-            } 
-          }
-
-          while (phase_C == 2){
-            index = keyPad.getKey();
-            
-            //clear du tableau des adresses I2C
-            for(int i = 0; i < 127; i++ ){
-              I2C_adresses[i] = -1;
-            }
-
-            nDevices = 0;
-            for(address = 1; address < 127; address++ )
-            {
-              // The i2c_scanner uses the return value of
-              // the Write.endTransmisstion to see if
-              // a device did acknowledge to the address.
-              Scanner.beginTransmission(address);
-              error = Scanner.endTransmission();
-
-              if (error == 0)
-              {
-                Serial.print("I2C device found at address 0x");
-                if (address<16){
-                  Serial.print("1000");
-                }               
-                Serial.print(address,HEX);
-                Serial.println("  !");
-
-                I2C_adresses[address] = address;
-
-                nDevices++;
-              }
-              else if (error==4)
-              {
-                Serial.print("Unknown error at address 0x");
-                if (address<16){
-                  Serial.print("0");
-                }
-                Serial.println(address,HEX);
-              }
-            }
-
-            lcd.setCursor(0, 0); 
-            lcd.print("Appareils I2C :");
-            lcd.setCursor(0, 1);
-
-            for(int i = 0; i < 127; i++ ){
-              if (I2C_adresses[i] != 0xFF){
-                lcd.print(" x");
-                lcd.print(I2C_adresses[i],HEX);
-              }
-            }
-            lcd.setCursor(0, 0);
-
-            if (nDevices == 0){
-              Serial.println("No I2C devices found\n");
-            } else{
-              Serial.println("done\n");
-            }
-
-            delay(1000);
-
-            //Sortie du menu C
-              if (index == 12 /*'*' : Retour*/){
-              Serial.print("Retour");
-              menu_enabled = 1;
-              phase_A = 1;
-              phase_B = 1;
-              phase_C = 1;
-              menu_selected = 0;
-              lcd.clear();
-              delay(300);
-              break;
-              }
-          }
-        break;
         case 4 /*Menu D*/ :
 
         break;

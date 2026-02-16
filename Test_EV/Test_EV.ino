@@ -24,13 +24,16 @@ void setup() {
 }
 
 void loop() {
-
+  digitalWrite(10, true);
   digitalWrite(8, true);
   delay(7000);
+  digitalWrite(10, false);
   digitalWrite(8, false);
 
+  digitalWrite(11, true);
   digitalWrite(9, true);
   delay(7000);
+  digitalWrite(11, false);
   digitalWrite(9, false);
   delay(1000);
 }
