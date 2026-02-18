@@ -309,7 +309,7 @@ C : IHM
             index = keyPad.getKey();
             lcd.setCursor(0, 0); 
             lcd.print(volume_contenant,0);
-            lcd.println(" | ");
+            lcd.print(" | ");
             lcd.print(rapport_diluant,0);
             lcd.print(" <> ");
             lcd.print(rapport_alcool,0);
@@ -384,6 +384,10 @@ C : IHM
               duree_EV2 = (volume_cuve2_actuel*9361.1-872.2) - ((volume_cuve2_actuel-volume_contenant_cuve2)*9361.1-872.2);
               
               //On ajoute les temps d'ouvertures/fermetures complets des EV et on calibre pour compenser ces temps
+              /*
+              On compense temporairement les contraintes liées aux temps d'ouverture et de fermtures des EV en réduisant leurs temps d'ouverture. Celà réduit pour le moment l'efficacité de fonctionnement de la machine.
+              Pour l'instant, elle est plus ou moins fiable de 0 à 600 mL.
+              */
               duree_tot_EV1_ouvert = duree_EV1 + 3300;
               duree_tot_EV2_ouvert = duree_EV2 + 3300;
               duree_tot_EV1_ferme = duree_tot_EV1_ouvert + 9000;
