@@ -212,6 +212,8 @@ C : IHM
 
           lcd.setCursor(cpt_animation-1, 1);
           lcd.print(" ");
+          lcd.setCursor(4, 1); 
+          lcd.print("0-600 mL");
           lcd.setCursor(cpt_animation, 1);
           lcd.print(">");
           delay(300);
@@ -267,6 +269,7 @@ C : IHM
             index = keyPad.getKey();
             lcd.setCursor(4, 0); 
             lcd.print("Dilution");
+            //On s'assure que l'on vient écrire seulement avec des entiers
             if (index >= 0 && index < 3 || index >= 4 && index < 7 || index >= 8 && index < 11 || index == 13){
               
               //Récupération de la valeur rentrée
@@ -381,8 +384,8 @@ C : IHM
               duree_EV2 = (volume_cuve2_actuel*9361.1-872.2) - ((volume_cuve2_actuel-volume_contenant_cuve2)*9361.1-872.2);
               
               //On ajoute les temps d'ouvertures/fermetures complets des EV et on calibre pour compenser ces temps
-              duree_tot_EV1_ouvert = duree_EV1 + 9000;
-              duree_tot_EV2_ouvert = duree_EV2 + 9000;
+              duree_tot_EV1_ouvert = duree_EV1 + 3300;
+              duree_tot_EV2_ouvert = duree_EV2 + 3300;
               duree_tot_EV1_ferme = duree_tot_EV1_ouvert + 9000;
               duree_tot_EV2_ferme = duree_tot_EV2_ouvert + 9000;
 
