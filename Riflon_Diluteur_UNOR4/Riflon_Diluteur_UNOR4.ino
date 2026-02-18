@@ -20,7 +20,8 @@ uint32_t lastKeyPressed = 0;
 uint8_t index;
 
 //Définitions des symboles qui correspondront aux touches du pad
-char keys[] = "123A456B789C*0#D N";  //  N = NoKey, F = Fail
+//0(1) 1(2) 2(3) 3(A) 4(4) 5(5) 6(6) 7(B) 8(7) 9(8) 10(9) 11(C) 12(*) 13(0) 14(#) 15(D) 16(N) 17(F)
+char keys[] = "123A456B789C*0#DNF";  //  N = NoKey, F = Fail
 int menu_enabled;
 
 //Adressage du deuxième PCF8574, utilisé pour les 2 capteurs à ultrasons
@@ -39,7 +40,7 @@ String digit_concat;
 float rapport_diluant;
 float rapport_alcool;
 float distance;
-float time;
+float time1;
 float distance2;
 float time2;
 float volume_cuve1_max = 2.58;
@@ -52,8 +53,10 @@ float volume_contenant_cuve1;
 float volume_contenant_cuve2;
 float duree_EV1;
 float duree_EV2;
-float duree_tot_EV1;
-float duree_tot_EV2;
+float duree_tot_EV1_ouvert;
+float duree_tot_EV2_ouvert;
+float duree_tot_EV1_ferme;
+float duree_tot_EV2_ferme;
 int prod_ok;
 int start_timer_EV1;
 int delta_time_EV1;
@@ -125,8 +128,8 @@ void setup()
   Scanner.begin();
 
   //Rapports de dilution par défaut
-  digit_buffer2[0] = 5;
-  digit_buffer2[1] = 1;
+  digit_buffer2[0] = "5";
+  digit_buffer2[1] = "1";
 
   //Initiation des vannes
   digitalWrite(8, true);
@@ -229,7 +232,7 @@ C : IHM
               //Récupération de la valeur rentrée
               digit_buffer[2] = digit_buffer[1];
               digit_buffer[1] = digit_buffer[0];
-              digit_buffer[0] = keys[index];
+              digit_buffer[0] = String(keys[index]);
               digit_concat = digit_buffer[0] + digit_buffer[1] + digit_buffer[2];
               Serial.println(digit_concat);
               /*
@@ -268,7 +271,7 @@ C : IHM
               
               //Récupération de la valeur rentrée
               digit_buffer2[1] = digit_buffer2[0];
-              digit_buffer2[0] = keys[index];
+              digit_buffer2[0] = String(keys[index]);
               Serial.print(digit_buffer2[0]);
               Serial.print(" <> ");
               Serial.println(digit_buffer2[1]);
@@ -311,7 +314,6 @@ C : IHM
             lcd.print("Valider 1:Y 2:N");
             //lcd.display();
             //lcd.clear();
-            delay(300);
 
             if (index == 0){
               Serial.println("Production lancée");
@@ -328,23 +330,22 @@ C : IHM
               menu_selected = 0;
               lcd.clear();
               break;
-            }       
+            }
           
           }
           
           //Production en cours
           while (phase_A == 4){
-
             //Mesure des hauteurs
             UltrasoundSensors.digitalWrite(P7, HIGH);
             delayMicroseconds(10);
             UltrasoundSensors.digitalWrite(P7, LOW);
 
             //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time = UltrasoundSensors.pulseIn(P6, HIGH);
+            time1 = UltrasoundSensors.pulseIn(P6, HIGH);
 
             //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance = ((time / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
+            distance = ((time1 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
 
             UltrasoundSensors.digitalWrite(P5, HIGH);
             delayMicroseconds(10);
@@ -362,7 +363,10 @@ C : IHM
 
             //Obtention des volumes de départ des cuves ainsi que des temps d'ouverture des vannes
             if (one_time[7]){
-              
+
+              //Initialisation de la variable de check de fin de prod ici dû à un problème d'écriture lorsqu'on le fait dans les variables global ou dans le setup.
+              prod_ok = 0;
+
               volume_contenant_cuve1 = (rapport_diluant / (rapport_diluant + rapport_alcool)) * (volume_contenant/1000);
               volume_contenant_cuve2 = (rapport_alcool / (rapport_diluant + rapport_alcool)) * (volume_contenant/1000);
 
@@ -376,9 +380,11 @@ C : IHM
               duree_EV1 = (volume_cuve1_actuel*9361.1-872.2) - ((volume_cuve1_actuel-volume_contenant_cuve1)*9361.1-872.2);
               duree_EV2 = (volume_cuve2_actuel*9361.1-872.2) - ((volume_cuve2_actuel-volume_contenant_cuve2)*9361.1-872.2);
               
-              //On ajoute les temps d'ouvertures complets des EV
-              duree_tot_EV1 = duree_EV1 + 9000;
-              duree_tot_EV2 = duree_EV2 + 9000;
+              //On ajoute les temps d'ouvertures/fermetures complets des EV et on calibre pour compenser ces temps
+              duree_tot_EV1_ouvert = duree_EV1 + 9000;
+              duree_tot_EV2_ouvert = duree_EV2 + 9000;
+              duree_tot_EV1_ferme = duree_tot_EV1_ouvert + 9000;
+              duree_tot_EV2_ferme = duree_tot_EV2_ouvert + 9000;
 
               Serial.print("Volume voulu dans cuve 1 : ");
               Serial.println(volume_contenant_cuve1, 5);
@@ -405,7 +411,7 @@ C : IHM
 
             delta_time_EV1 = millis() - start_timer_EV1;
             //Pilotage EV1
-            if (delta_time_EV1 <= duree_tot_EV1 && duree_EV1 > 0){
+            if (delta_time_EV1 <= duree_tot_EV1_ouvert && duree_EV1 > 0){
               //Pilotage de EV1 en ouverture
               digitalWrite(8, false);
               digitalWrite(9, true);
@@ -413,15 +419,16 @@ C : IHM
               //Pilotage de EV1 en fermeture
               digitalWrite(9, false);
               digitalWrite(8, true);
-              if (one_time[9] && delta_time_EV1 > duree_tot_EV1 + 9000){
+              if (one_time[9] && delta_time_EV1 > duree_tot_EV1_ferme){
                 prod_ok = prod_ok + 1;
                 one_time[9] = false;
+                Serial.print(prod_ok);
               }
             }
 
             delta_time_EV2 = millis() - start_timer_EV2;
             //Pilotage EV2
-            if (delta_time_EV2 <= duree_tot_EV2 && duree_EV2 > 0){
+            if (delta_time_EV2 <= duree_tot_EV2_ouvert && duree_EV2 > 0){
               //Pilotage de EV1 en ouverture
               digitalWrite(10, false);
               digitalWrite(11, true);
@@ -429,9 +436,10 @@ C : IHM
               //Pilotage de EV1 en fermeture
               digitalWrite(11, false);
               digitalWrite(10, true);
-              if (one_time[10] && delta_time_EV1 > duree_tot_EV1 + 9000){
+              if (one_time[10] && delta_time_EV2 > duree_tot_EV2_ferme){
                 prod_ok = prod_ok + 1;
                 one_time[10] = false;
+                Serial.print(prod_ok);
               }
             }
              
@@ -453,12 +461,15 @@ C : IHM
           //Porduction terminée
           while (phase_A == 5){
             index = keyPad.getKey();
+            Serial.println(index);
 
             lcd.setCursor(0, 0);
             lcd.print("Production");
             lcd.setCursor(0, 1);
-            lcd.print("terminée !");
-
+            lcd.print("termine !");
+            
+            delay(300);
+            
             //Sortie du menu A
             if (index == 12 /*'*' : Retour*/){
               Serial.print("Retour");
@@ -491,10 +502,10 @@ C : IHM
             UltrasoundSensors.digitalWrite(P7, LOW);
 
             //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time = UltrasoundSensors.pulseIn(P6, HIGH);
+            time1 = UltrasoundSensors.pulseIn(P6, HIGH);
 
             //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance = ((time / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
+            distance = ((time1 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
             
             delta_time_U1 = millis() - start_timer_U1;
 
@@ -614,10 +625,10 @@ C : IHM
             UltrasoundSensors.digitalWrite(P7, LOW);
 
             //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
-            time = UltrasoundSensors.pulseIn(P6, HIGH);
+            time1 = UltrasoundSensors.pulseIn(P6, HIGH);
 
             //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
-            distance = ((time / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
+            distance = ((time1 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
 
             //Mesure des hauteurs
             UltrasoundSensors.digitalWrite(P5, HIGH);
