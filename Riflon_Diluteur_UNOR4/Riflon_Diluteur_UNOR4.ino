@@ -43,8 +43,8 @@ float distance;
 float time1;
 float distance2;
 float time2;
-float volume_cuve1_max = 2.58;
-float volume_cuve2_max = 2.47;
+float volume_cuve1_max = 2.70;
+float volume_cuve2_max = 2.35;
 float volume_cuve1;
 float volume_cuve2;
 float volume_cuve1_actuel;
@@ -400,7 +400,7 @@ C : IHM
               Serial.println(duree_EV2, 5);
               
               one_time[7] = false;
-            }    
+            }
 
             //Initialisation du temps de pilotage pour ouvrir/fermer les EV
             if (one_time[8]){
@@ -461,14 +461,11 @@ C : IHM
           //Porduction terminée
           while (phase_A == 5){
             index = keyPad.getKey();
-            Serial.println(index);
 
             lcd.setCursor(0, 0);
             lcd.print("Production");
             lcd.setCursor(0, 1);
             lcd.print("termine !");
-            
-            delay(300);
             
             //Sortie du menu A
             if (index == 12 /*'*' : Retour*/){
@@ -650,6 +647,8 @@ C : IHM
             lcd.print("Distance : ");
             lcd.print(distance2);
             lcd.print(" cm");
+            
+            delay(500);
 
             //Passage aux bus PCF8574
             if (index == 14){
