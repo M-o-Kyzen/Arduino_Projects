@@ -14,6 +14,7 @@ const int rs = 8, en = 7, d4 = 6, d5 = 5, d6 = 4, d7 = 3;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 //Adressage du premier PCF8574, utilisé pour le pad
+//Adressage des PCF8574 : https://passionelectronique.fr/wp-content/uploads/tableau-adresses-i2c-pcf8574-binaire-hex.jpg
 I2CKeyPad keyPad(0x20);
 uint32_t start, stop;
 uint32_t lastKeyPressed = 0;
@@ -414,7 +415,7 @@ C : IHM
               //On ajoute les temps d'ouvertures/fermetures complets des EV et on calibre pour compenser ces temps
               /*
               On compense temporairement les contraintes liées aux temps d'ouverture et de fermtures des EV en réduisant leurs temps d'ouverture. Celà réduit pour le moment l'efficacité de fonctionnement de la machine.
-              Pour l'instant, elle est plus ou moins fiable de 0 à 600 mL.
+              Pour l'instant, elle est plus ou moins fiable de 0 à 600 mL. Représentation de la courbe d'évolution du volume en fonction du temps, utilisée pour le moment : https://imgur.com/a/QUm1aeE.
               */
               duree_tot_EV1_ouvert = duree_EV1 + 3300;
               duree_tot_EV2_ouvert = duree_EV2 + 3300;
@@ -762,6 +763,10 @@ C : IHM
 
             if (nDevices == 0){
               Serial.println("No I2C devices found\n");
+              lcd.clear();
+              lcd.print("No I2C devices");
+              lcd.setCursor(0, 1);
+              lcd.print("found");
             } else{
               Serial.println("done\n");
             }
