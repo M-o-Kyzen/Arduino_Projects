@@ -3,10 +3,16 @@
 ArduinoLEDMatrix matrix;
 
 //Numéro sortie pour émettre le signal
-int trigg=13;
+int trigg=10;
 //Numéro entrée pour recevoir le signal
-int echo=12;
+int echo=11;
 float distance;
+
+//Numéro sortie pour émettre le signal
+int trigg2=12;
+//Numéro entrée pour recevoir le signal
+int echo2=13;
+float distance2;
 
 
 void setup() {
@@ -14,10 +20,12 @@ void setup() {
   //Définition des E/S
   pinMode(trigg, OUTPUT);
   pinMode(echo, INPUT);
+  pinMode(trigg2, OUTPUT);
+  pinMode(echo2, INPUT);
 
   //reset du signal
   digitalWrite(trigg, false);
-
+  digitalWrite(trigg2, false);
   //declaration de la matrice
   matrix.begin();
   matrix.play(true);
@@ -48,6 +56,25 @@ void loop() {
   Serial.println(" µs"); 
   Serial.println(""); 
 
+  //Emission d'un signal de 10µs
+  digitalWrite(trigg2, true);
+  delayMicroseconds(10);
+  digitalWrite(trigg2, false);
+ 
+  //Mesure du temps (en microsecondes) qui sépare l'émission et la réception du signal de 10µs émis 
+  float time2 = pulseIn(echo2, true);
+
+  //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
+  float distance2 = ((time2/1000000)/2)*340*100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
+
+  //Affichage des résultats
+  Serial.print("Distance 2 : "); 
+  Serial.print(distance2); //en cm
+  Serial.println(" cm"); 
+  Serial.print("temps : ");
+  Serial.print(time2);
+  Serial.println(" µs"); 
+  Serial.println("");
 
 if (distance>120) {
     byte matrice[8][12] = {
@@ -233,6 +260,6 @@ if (distance>120) {
     matrix.renderBitmap(frame, 8, 12);
   };
 
-delay(3000);
+delay(1000);
 
 };

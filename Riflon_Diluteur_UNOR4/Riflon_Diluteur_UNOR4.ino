@@ -360,8 +360,8 @@ C : IHM
             //Calcul de la distance avant le rebond du signal (d=v*t) en centimètre
             distance2 = ((time2 / 1000000) / 2) * 340 * 100; // 1 s = 1 000 000 µs | On divise par 2 le temps pour obtenir la durée avant rebond
 
-            volume_cuve1_actuel = (distance*0.01 * 0.003025 * 3.14)*1000.0; //Calcul du volume de la cuve 1 en litre
-            volume_cuve2_actuel = (distance2*0.01 * 0.003025 * 3.14)*1000.0; //Calcul du volume de la cuve 2 en litre
+            volume_cuve1_actuel = volume_cuve1_max - (distance*0.01 * 0.003025 * 3.14159265359)*1000.0; //Calcul du volume de la cuve 1 en litre
+            volume_cuve2_actuel = volume_cuve2_max - (distance2*0.01 * 0.003025 * 3.14159265359)*1000.0; //Calcul du volume de la cuve 2 en litre
             
 
             //Obtention des volumes de départ des cuves ainsi que des temps d'ouverture des vannes
@@ -373,12 +373,10 @@ C : IHM
               volume_contenant_cuve1 = (rapport_diluant / (rapport_diluant + rapport_alcool)) * (volume_contenant/1000);
               volume_contenant_cuve2 = (rapport_alcool / (rapport_diluant + rapport_alcool)) * (volume_contenant/1000);
 
-              //volume_cuve1 = (distance*0.01 * 0.003025 * 3.14)*1000;
-              //volume_cuve2 = (distance2*0.01 * 0.003025 * 3.14)*1000;
               //Shunt test
-              volume_cuve1_actuel = 1.5;
-              volume_cuve2_actuel = 1.5;
-
+              //volume_cuve1_actuel = 1.5;
+              //volume_cuve2_actuel = 1.5;
+              
               //Calcul du temps d'ouverture des vannes à partir du delta entre le volume actuel d'une cuve et le volume final voulu après production
               duree_EV1 = (volume_cuve1_actuel*9361.1-872.2) - ((volume_cuve1_actuel-volume_contenant_cuve1)*9361.1-872.2);
               duree_EV2 = (volume_cuve2_actuel*9361.1-872.2) - ((volume_cuve2_actuel-volume_contenant_cuve2)*9361.1-872.2);
@@ -649,7 +647,6 @@ C : IHM
             lcd.print("Distance : ");
             lcd.print(distance);
             lcd.print(" cm");
-
             lcd.setCursor(0, 1); 
             lcd.print("Distance : ");
             lcd.print(distance2);
